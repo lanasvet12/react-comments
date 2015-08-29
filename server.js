@@ -1,57 +1,46 @@
-var http = require('http'),
+var express = require('express'),
+    bodyParser = require('body-parser'),
     url = require('url'),
-    fs = require('fs')
-    ;
+    fs = require('fs');
 
-function start() {
-    http.createServer(function (request, response) {
-        var pathname = url.parse(request.url).pathname;
-        // console.log(pathname);
-        if (pathname === '/') {
-            fs.readFile('./public/index.html', function (error, data) {
-                response.writeHead(200, {'Content-Type': 'text/html'});
-                response.write(data);
-                response.end();
-            });
-        } else if (pathname === '/comments.json') {
-            if (request.method === 'POST') {
-                var postData = '';
-                request.on('data', function (chunk) {
-                    postData += chunk;
-                });
-                request.on('end', function () {
-                    fs.readFile('./comments.json', function (error, data) {
-                        var comments = JSON.parse(data.toString());
-                        comments.push(JSON.parse(postData));
-                        var commentsData = JSON.stringify(comments, null, 4);
-                        fs.writeFile('./comments.json', commentsData, function () {
-                            response.writeHead(200, {'Content-Type': 'application/json'});
-                            response.write(commentsData);
-                            response.end();
-                        });
-                    });
-                });
-            } else {
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                fs.readFile('./comments.json', function (error, data) {
-                    response.write(data);
-                    response.end();
-                });
-            }
-    
-        } else if (pathname.substr(0, 6) === '/build') {
-            response.writeHead(200, {'Content-Type': 'application/javascript'});
-            fs.readFile('./public' + pathname, function (error, data) {
-                response.write(data);
-                response.end();
-            });
-        } else {
-            response.writeHead(404);
-            response.write('FILE NOT FOUND');
+var app = express();
+var jsonParser = bodyParser.json();
+
+app.use(express.static('./public'));
+
+app.get('/', function (request, response) {
+    response.sendFile('./public/index.html', {
+        root: __dirname
+    });
+});
+
+app.get('/comments/', function (request, response) {
+    response.sendFile('./comments.json', {
+        root: __dirname
+    });
+});
+
+app.post('/comments/', jsonParser, function (request, response) {
+    var author = request.body.author;
+    var text = request.body.text;
+    var comment = { author: author, text: text };
+    fs.readFile('./comments.json', function (error, data) {
+        var comments = JSON.parse(data.toString());
+        comments.push(comment);
+        var commentsData = JSON.stringify(comments, null, 4);
+        fs.writeFile('./comments.json', commentsData, function () {
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.write(commentsData);
             response.end();
-        }
+        });
+    });
 
-    }).listen(8888);
+});
+
+function start (){
+    app.listen(8888, function () {
+
+    });
 }
 
 exports.start = start;
