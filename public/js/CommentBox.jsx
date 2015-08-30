@@ -11,7 +11,7 @@ var CommentBox = React.createClass({
         return {data: []};
     },
     componentDidMount: function () {
-        this.socket = io.connect('http://localhost:8888');
+        this.socket = io.connect(window.location.href);
         this.socket.on('comments', function (data) {
             this.setState({data: data});
         }.bind(this));

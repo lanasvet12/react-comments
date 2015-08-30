@@ -22,7 +22,7 @@ io.on('connection', function (socket) {
 });
 
 function start (){
-    http.listen(8888);
+    http.listen(process.env.PORT || 8888);
 }
 
 exports.start = start;
