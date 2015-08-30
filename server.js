@@ -1,10 +1,9 @@
-var express = require('express'),
-    bodyParser = require('body-parser'),
-    url = require('url'),
-    fs = require('fs');
-
+var express = require('express');
 var app = express();
-var jsonParser = bodyParser.json();
+var http = require('http').createServer(app);
+var fs = require('fs');
+var io = require('socket.io')(http);
+var commentService = require('./CommentService');
 
 app.use(express.static('./public'));
 
@@ -14,33 +13,16 @@ app.get('/', function (request, response) {
     });
 });
 
-app.get('/comments/', function (request, response) {
-    response.sendFile('./comments.json', {
-        root: __dirname
+io.on('connection', function (socket) {
+    socket.emit('comments', commentService.getComments());
+    socket.on('comment.add', function (comment) {
+        commentService.addComment(comment);
+        io.sockets.emit('comments', commentService.getComments());
     });
-});
-
-app.post('/comments/', jsonParser, function (request, response) {
-    var author = request.body.author;
-    var text = request.body.text;
-    var comment = { author: author, text: text };
-    fs.readFile('./comments.json', function (error, data) {
-        var comments = JSON.parse(data.toString());
-        comments.push(comment);
-        var commentsData = JSON.stringify(comments, null, 4);
-        fs.writeFile('./comments.json', commentsData, function () {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.write(commentsData);
-            response.end();
-        });
-    });
-
 });
 
 function start (){
-    app.listen(8888, function () {
-
-    });
+    http.listen(8888);
 }
 
 exports.start = start;

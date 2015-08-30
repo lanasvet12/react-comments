@@ -1,43 +1,20 @@
 var React = require('react');
 var CommentList = require('./CommentList');
 var CommentForm = require('./CommentForm');
-var $ = require('jquery');
+var io = require('socket.io-client');
 
 var CommentBox = React.createClass({
-    loadCommentsFromServer: function () {
-        $.ajax({
-            url: this.props.url,
-            dataType: 'json',
-            cache: false,
-            success: function (data) {
-                this.setState({data: data});
-            }.bind(this),
-            error: function (xhr, status, err) {
-                console.error(this.props.url, status, err.toString());
-            }.bind(this)
-        });
-    },
     handleCommentSubmit: function (comment) {
-        $.ajax({
-            url: this.props.url,
-            dataType: 'json',
-            contentType: 'application/json',
-            type: 'POST',
-            data: JSON.stringify(comment),
-            success: function (data) {
-                this.setState({data: data});
-            }.bind(this),
-            error: function (xhr, status, err) {
-                console.error(this.props.url, status, err.toString());
-            }.bind(this)
-        });
+        this.socket.emit('comment.add', comment);
     },
     getInitialState: function () {
         return {data: []};
     },
     componentDidMount: function () {
-        this.loadCommentsFromServer();
-        setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+        this.socket = io.connect('http://localhost:8888');
+        this.socket.on('comments', function (data) {
+            this.setState({data: data});
+        }.bind(this));
     },
 	render: function () {
 		return (
