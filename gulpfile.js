@@ -31,7 +31,7 @@ gulp.task('build', function (){
             .bundle()
             .pipe(source('bundle.js'))
             .pipe(gulp.dest('./public/build/'));
-    })
+        })
         .bundle()
         .pipe(source('bundle.js'))
         .pipe(gulp.dest('./public/build/'));

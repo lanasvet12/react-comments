@@ -2,6 +2,6 @@ var React = require('react');
 var CommentBox = require('./CommentBox');
 
 React.render(
-    <CommentBox url='/comments/' pollInterval={2000} />,
+    <CommentBox url='/comments/' />,
     document.getElementById('content')
 );
